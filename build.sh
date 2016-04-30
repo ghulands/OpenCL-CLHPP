@@ -9,5 +9,5 @@ fi
 mkdir $BUILD_FOLDER
 cd $BUILD_FOLDER
 cmake -DCMAKE_BUILD_TYPE=DEBUG ..
-make
+make -j8
 
