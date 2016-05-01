@@ -28,8 +28,6 @@ if (SUPPORTS_OPEN_CL_2_0_APIS OR SUPPORTS_OPEN_CL_2_1_APIS OR SUPPORTS_OPEN_CL_2
   set_source_files_properties(${CLCPP_BINARY_DIR}/include/CL/cl2.hpp PROPERTIES GENERATED 1)
 endif()
 
-
-
 include_directories(
     ${CLCPP_BINARY_DIR}/include
     ${OPENCL_DIST_DIR}/include

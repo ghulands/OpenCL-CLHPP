@@ -9,7 +9,6 @@ endif()
 add_custom_command(
     OUTPUT stripped/cl.h
     COMMAND ${CMAKE_COMMAND} -E make_directory stripped
-    COMMAND ${CMAKE_COMMAND} -E make_directory mocks
     COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/strip_defines.py ${OPENCL_MAIN_HEADER} stripped/cl.h
     COMMENT "Stripping defines from cl.h"
     DEPENDS ${OPENCL_MAIN_HEADER} strip_defines.py)
@@ -17,6 +16,7 @@ add_library(stripped_cl_h OBJECT stripped/cl.h)
 
 add_custom_command(
     OUTPUT mocks/Mockcl.c mocks/Mockcl.h
+	COMMAND ${CMAKE_COMMAND} -E make_directory mocks
     COMMAND ruby ${CMOCK_DIR}/lib/cmock.rb -o${CMAKE_CURRENT_SOURCE_DIR}/${CMOCK_CONFIG_FILE} stripped/cl.h
     COMMENT "Generating mocks"
     DEPENDS stripped/cl.h ${CMOCK_CONFIG_FILE})
@@ -40,7 +40,8 @@ if (SUPPORTS_OPEN_CL_2_0_APIS OR SUPPORTS_OPEN_CL_2_1_APIS OR SUPPORTS_OPEN_CL_2
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       COMMENT "Generating test runner for 2.0"
       DEPENDS test_cl2hpp.cpp ${CMOCK_CONFIG_FILE})
-  add_library(test_cl2hpp_runner STATIC test_cl2hpp_Runner.c)
+  add_library(test_cl2hpp_runner STATIC test_cl2hpp_Runner.c test_cl2hpp.cpp test_clhpp.cpp)
+  target_link_libraries(test_cl2hpp_runner mock_cl)
   add_dependencies(test_cl2hpp_runner mock_cl)
 endif()
 
@@ -129,10 +130,10 @@ add_dependencies(test_clhpp_deprecated_1_2 generate_clhpp test_clhpp_runner)
 add_test(run_test_clhpp_deprecated_1_2 test_clhpp_deprecated_1_2)
 
 if (SUPPORTS_OPEN_CL_2_0_APIS OR SUPPORTS_OPEN_CL_2_1_APIS OR SUPPORTS_OPEN_CL_2_2_APIS)
-  set_source_files_properties(test_cl2hpp_Runner.c PROPERTIES LANGUAGE "CXX")
+  set_source_files_properties(test_cl2hpp_Runner.c PROPERTIES LANGUAGE "C")
   add_executable(test_cl2hpp ${TEST_CL2HPP_SOURCES} ${TEST_CL2HPP_HEADERS})
-  target_link_libraries(test_cl2hpp ${TEST_LIBS} test_clhpp2_runner)
-  add_dependencies(test_cl2hpp generate_cl2hpp)
+  target_link_libraries(test_cl2hpp test_cl2hpp_runner )
+  add_dependencies(test_cl2hpp generate_cl2hpp test_cl2hpp_runner)
   add_test(run_test_cl2hpp test_cl2hpp)
 endif()
 
